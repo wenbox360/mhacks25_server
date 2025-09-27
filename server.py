@@ -2,40 +2,28 @@
 
 from fastmcp import FastMCP
 from resources import register_resources
+from tools import register_tools
+from prompts import register_prompts
 from sendQueue import start_queue_processor
 from tools import register_tools
 
 def setup_server() -> FastMCP:
     """Initializes and configures the MCP server instance."""
     print("Setting up MCP server...")
-    mcp = FastMCP()
+    mcp = FastMCP("MHacks 2025 MCP Server")
     
-    # Register all resource handlers (e.g., from resources.py)
+    # Register all handlers
     register_resources(mcp)
     register_tools(mcp)
-    print("All resources have been registered.")
+    register_prompts(mcp)
+    print("All resources, tools, and prompts have been registered.")
+
+    start_queue_processor()
     
     return mcp
 
-def main():
-    """Main function to set up and run the server."""
-    # In a real application, this would start your hardware communication thread
-    start_queue_processor()
-    
-    mcp_server = setup_server()
-    
-    print("\nStarting MCP server with STDIO transport")
-    print("Press Ctrl+C to shut down.")
-    
-    try:
-        # This call blocks and runs the server indefinitely using STDIO transport
-        mcp_server.run()
-    except KeyboardInterrupt:
-        print("\nShutdown signal received. Closing server.")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-    finally:
-        print("Server has been shut down.")
+# Create the server object for FastMCP Cloud
+mcp = setup_server()
 
 if __name__ == "__main__":
-    main()
+    mcp.run()
