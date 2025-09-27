@@ -1,6 +1,7 @@
 # server.py
 
 from fastmcp import FastMCP
+from tools import register_tools
 from resources import register_resources
 from sendQueue import start_queue_processor
 
@@ -11,6 +12,7 @@ def setup_server() -> FastMCP:
     
     # Register all resource handlers (e.g., from resources.py)
     register_resources(mcp)
+    register_tools(mcp)
     print("All resources have been registered.")
     
     return mcp
@@ -21,7 +23,7 @@ def main():
     start_queue_processor()
     
     mcp_server = setup_server()
-    
+
     print("\nStarting MCP server with STDIO transport")
     print("Press Ctrl+C to shut down.")
     
