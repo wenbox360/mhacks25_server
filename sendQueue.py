@@ -1,6 +1,5 @@
 # sendQueue.py
 
-import paramiko
 import serial
 import threading
 import time
