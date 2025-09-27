@@ -3,6 +3,7 @@
 from fastmcp import FastMCP
 from resources import register_resources
 from sendQueue import start_queue_processor
+from tools import register_tools
 
 def setup_server() -> FastMCP:
     """Initializes and configures the MCP server instance."""
@@ -11,6 +12,7 @@ def setup_server() -> FastMCP:
     
     # Register all resource handlers (e.g., from resources.py)
     register_resources(mcp)
+    register_tools(mcp)
     print("All resources have been registered.")
     
     return mcp
