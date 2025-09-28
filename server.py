@@ -4,7 +4,7 @@ from fastmcp import FastMCP
 from resources import register_resources
 from tools import register_tools
 from prompts import register_prompts
-from sendQueue import start_queue_processor
+from sendQueue import start_send_queue_processor
 from tools import register_tools
 
 def setup_server() -> FastMCP:
@@ -18,7 +18,7 @@ def setup_server() -> FastMCP:
     register_prompts(mcp)
     print("All resources, tools, and prompts have been registered.")
 
-    start_queue_processor()
+    start_send_queue_processor()
     
     return mcp
 
