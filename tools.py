@@ -36,10 +36,67 @@ async def control_servo_impl(context: Context, position: int) -> Dict[str, Any]:
     return {"message": f"Servo set to {position} degrees", "position": position}
 
 
+# --- Tool implementations for all hardware types ---
+
+async def read_temperature_impl(context: Context, pin: int) -> Dict[str, Any]:
+    """Read temperature from DHT22 sensor on specified pin."""
+    command = {"command": 10, "pin": pin}
+    add_command_to_queue(command)
+    return {"message": f"Reading temperature from DHT22 on pin {pin}", "sensor": "DHT22", "pin": pin}
+
+async def read_humidity_impl(context: Context, pin: int) -> Dict[str, Any]:
+    """Read humidity from DHT22 sensor on specified pin."""
+    command = {"command": 14, "pin": pin}
+    add_command_to_queue(command)
+    return {"message": f"Reading humidity from DHT22 on pin {pin}", "sensor": "DHT22", "pin": pin}
+
+async def control_led_impl(context: Context, pin: int, state: str) -> Dict[str, Any]:
+    """Control LED on specified pin - state should be 'on' or 'off'."""
+    if state.lower() not in ['on', 'off']:
+        return {"error": "State must be 'on' or 'off'"}
+    value = 1 if state.lower() == 'on' else 0
+    command = {"command": 16, "pin": pin, "value": value}
+    add_command_to_queue(command)
+    return {"message": f"LED turned {state} on pin {pin}", "state": state, "pin": pin}
+
+async def control_relay_impl(context: Context, pin: int, state: str) -> Dict[str, Any]:
+    """Control relay on specified pin - state should be 'on' or 'off'."""
+    if state.lower() not in ['on', 'off']:
+        return {"error": "State must be 'on' or 'off'"}
+    value = 1 if state.lower() == 'on' else 0
+    command = {"command": 15, "pin": pin, "value": value}
+    add_command_to_queue(command)
+    return {"message": f"Relay {state} on pin {pin}", "state": state, "pin": pin}
+
+async def read_button_impl(context: Context, pin: int) -> Dict[str, Any]:
+    """Read button state on specified pin."""
+    command = {"command": 13, "pin": pin}
+    add_command_to_queue(command)
+    return {"message": f"Reading button state on pin {pin}", "pin": pin}
+
+async def read_distance_ultrasonic_impl(context: Context, trigger_pin: int, echo_pin: int) -> Dict[str, Any]:
+    """Read distance from HC-SR04 ultrasonic sensor."""
+    command = {"command": 11, "trigger_pin": trigger_pin, "echo_pin": echo_pin}
+    add_command_to_queue(command)
+    return {"message": f"Reading distance from HC-SR04: trigger pin {trigger_pin}, echo pin {echo_pin}", "trigger_pin": trigger_pin, "echo_pin": echo_pin, "sensor": "HC-SR04"}
+
+async def read_distance_ir_impl(context: Context, pin: int) -> Dict[str, Any]:
+    """Read distance from IR distance sensor."""
+    command = {"command": 12, "pin": pin}
+    add_command_to_queue(command)
+    return {"message": f"Reading distance from IR sensor on pin {pin}", "sensor": "IR Distance Sensor", "pin": pin}
+
 # --- Registry of all tools with their hardware dependency ---
 TOOL_SPECS = [
-    {"name": "piezo_beep", "impl": piezo_beep_impl, "hardware": "Piezo Buzzer"},
-    {"name": "control_servo", "impl": control_servo_impl, "hardware": "Micro Servo - SG90"},
+    {"name": "piezo_beep", "impl": piezo_beep_impl, "hardware": "Piezo_Buzzer"},
+    {"name": "control_servo", "impl": control_servo_impl, "hardware": "Micro_Servo_SG90"},
+    {"name": "read_temperature", "impl": read_temperature_impl, "hardware": "dht22"},
+    {"name": "read_humidity", "impl": read_humidity_impl, "hardware": "dht22"},
+    {"name": "control_led", "impl": control_led_impl, "hardware": "led"},
+    {"name": "control_relay", "impl": control_relay_impl, "hardware": "relay"},
+    {"name": "read_button", "impl": read_button_impl, "hardware": "button"},
+    {"name": "read_distance_ultrasonic", "impl": read_distance_ultrasonic_impl, "hardware": "hcsr04"},
+    {"name": "read_distance_ir", "impl": read_distance_ir_impl, "hardware": "IR_GP2Y0A21YK0F"},
 ]
 
 

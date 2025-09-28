@@ -5,19 +5,87 @@ from resources import register_resources
 from tools import register_tools
 from prompts import register_prompts
 from sendQueue import start_send_queue_processor
-from tools import register_tools
+import json
+import os
+import threading
+import time
+
+def get_available_hardware() -> set[str]:
+    """Get set of available hardware from mappings file."""
+    try:
+        # Try to read from the registry mappings file  
+        mappings_file = "mappings.json"
+        if os.path.exists(mappings_file):
+            with open(mappings_file, 'r') as f:
+                mappings = json.load(f)  # Direct array, not nested in object
+                # Extract part names from mappings
+                hardware_parts = set()
+                for mapping in mappings:
+                    part_id = mapping.get('partId', '')
+                    # Add part IDs directly - they match the hardware names in TOOL_SPECS
+                    if part_id:
+                        hardware_parts.add(part_id)
+                return hardware_parts
+    except Exception as e:
+        print(f"Error reading hardware mappings: {e}")
+    return set()
+
+def watch_mappings_file(register_func, mappings_file):
+    """Watch the mappings file for changes and reload tools when it changes."""
+    last_modified = 0
+    
+    while True:
+        try:
+            if os.path.exists(mappings_file):
+                current_modified = os.path.getmtime(mappings_file)
+                if current_modified != last_modified:
+                    if last_modified != 0:  # Skip initial load
+                        print("Mappings file changed, reloading tools...")
+                        register_func()
+                    last_modified = current_modified
+        except Exception as e:
+            print(f"Error watching mappings file: {e}")
+        
+        time.sleep(1)  # Check every second
 
 def setup_server() -> FastMCP:
     """Initializes and configures the MCP server instance."""
     print("Setting up MCP server...")
     mcp = FastMCP("MHacks 2025 MCP Server")
     
-    # Register all handlers
+    # Clear mappings on fresh start
+    mappings_file = "../frontend-wjsons/registry-server/mappings.json"
+    try:
+        with open(mappings_file, 'w') as f:
+            json.dump([], f)
+        print("Cleared mappings on fresh start")
+    except Exception as e:
+        print(f"Error clearing mappings: {e}")
+    
+    # Register static handlers first
     register_resources(mcp)
-    register_tools(mcp, {"Piezo Buzzer"})
     register_prompts(mcp)
-    print("All resources, tools, and prompts have been registered.")
-
+    
+    # Dynamic tool registration - will be updated when mappings change
+    def register_dynamic_tools():
+        available_hardware = get_available_hardware()
+        print(f"Available hardware: {available_hardware}")
+        register_tools(mcp, available_hardware)
+        print("Tools registered based on current hardware mappings.")
+    
+    # Initial tool registration
+    register_dynamic_tools()
+    
+    # Start file watcher in background thread
+    mappings_file = "../frontend-wjsons/registry-server/mappings.json"
+    watcher_thread = threading.Thread(
+        target=watch_mappings_file, 
+        args=(register_dynamic_tools, mappings_file),
+        daemon=True
+    )
+    watcher_thread.start()
+    print("Started mappings file watcher...")
+    
     start_send_queue_processor()
     
     return mcp
