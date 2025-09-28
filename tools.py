@@ -1,17 +1,29 @@
 # tools.py
 from fastmcp import FastMCP, Context
 from typing import Dict, Any
-from sendQueue import add_command_to_queue
+from sendQueue import add_command_to_queue, responses
+import asyncio
+import uuid
 
 # --- Tool implementations (not decorated) ---
 
-async def piezo_beep_impl(context: Context, duration: int = 500) -> Dict[str, Any]:
-    """Control piezo buzzer - duration in milliseconds."""
+
+async def piezo_beep_impl(context, duration: int = 500):
     if duration <= 0:
         return {"error": "duration must be > 0"}
-    command = {"command": 2, "value": duration}
+    response_key = f"beep_{uuid.uuid4().hex[:8]}"
+    command = {"command": 2, "value": duration, "response_key": response_key}
     add_command_to_queue(command)
-    return {"message": f"Sent beep for {duration}ms"}
+
+    timeout = 3.0
+    start = asyncio.get_event_loop().time()
+    while (asyncio.get_event_loop().time() - start) < timeout:
+        resp = responses.get(response_key)
+        if resp is not None:
+            return {"message": f"Sent beep for {duration}ms", "response": resp}
+        await asyncio.sleep(0.05)
+
+    return {"message": f"Sent beep for {duration}ms", "response": None, "warning": "no response from Arduino (timeout)"}
 
 
 async def control_servo_impl(context: Context, position: int) -> Dict[str, Any]:

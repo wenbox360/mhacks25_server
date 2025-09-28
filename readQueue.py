@@ -5,7 +5,7 @@ import threading
 import time
 from collections import deque
 
-SERIAL_PORT = '/dev/ttyACM0'  # Change as needed
+SERIAL_PORT = '/dev/tty.usbmodem101'  # Change as needed
 BAUD_RATE = 9600
 
 # Map of id -> deque of recent values
