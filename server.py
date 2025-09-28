@@ -14,7 +14,7 @@ def setup_server() -> FastMCP:
     
     # Register all handlers
     register_resources(mcp)
-    register_tools(mcp)
+    register_tools(mcp, {"Piezo Buzzer"})
     register_prompts(mcp)
     print("All resources, tools, and prompts have been registered.")
 
